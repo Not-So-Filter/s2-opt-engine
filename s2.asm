@@ -4748,7 +4748,7 @@ OilSlides:
 	lsr.w	#7,d1
 	andi.w	#$7F,d1
 	add.w	d1,d0
-	lea	(Level_Layout).w,a2
+	lea	(Level_layout_header).w,a2
 	move.b	(a2,d0.w),d0
 	lea	OilSlides_Chunks_End(pc),a2
 
@@ -9481,12 +9481,12 @@ ContinueScreen_LoadLetters:
 	move.l	#vdpComm(tiles_to_bytes(ArtTile_ArtNem_TitleCard),VRAM,WRITE),(VDP_control_port).l
 	lea	(ArtNem_TitleCard).l,a0
 	bsr.w	NemDec
-	lea	(Level_Layout).w,a4
+	lea	(Level_layout_main).w,a4
 	lea	(ArtNem_TitleCard2).l,a0
 	bsr.w	NemDecToRAM
 	lea	ContinueScreen_AdditionalLetters(pc),a0
 	move.l	#vdpComm(tiles_to_bytes(ArtTile_ContinueScreen_Additional),VRAM,WRITE),(VDP_control_port).l
-	lea	(Level_Layout).w,a1
+	lea	(Level_layout_main).w,a1
 	lea	(VDP_data_port).l,a6
 -
 	moveq	#0,d0
@@ -17029,7 +17029,7 @@ LoadTilesAsYouMove:
 	lea	4(a6),a5
 	lea	(Scroll_flags_BG_copy).w,a2
 	lea	(Camera_BG_copy).w,a3
-	lea	(Level_Layout+$80).w,a4	; first background line
+	lea	(Level_layout_main+2).w,a4	; first background line
 	move.w	#vdpComm(VRAM_Plane_B_Name_Table,VRAM,WRITE)>>16,d2
 	bsr.w	Draw_BG1
 
@@ -17045,14 +17045,14 @@ LoadTilesAsYouMove:
 	beq.s	+
 	lea	(Scroll_flags_copy_P2).w,a2
 	lea	(Camera_P2_copy).w,a3	; second player camera
-	lea	(Level_Layout).w,a4
+	subq.w	#2,a4
 	move.w	#vdpComm(VRAM_Plane_A_Name_Table_2P,VRAM,WRITE)>>16,d2
 	bsr.w	Draw_FG_P2
 
 +
 	lea	(Scroll_flags_copy).w,a2
 	lea	(Camera_RAM_copy).w,a3
-	lea	(Level_Layout).w,a4
+	subq.w	#2,a4
 	move.w	#vdpComm(VRAM_Plane_A_Name_Table,VRAM,WRITE)>>16,d2
 
 	tst.b	(Screen_redraw_flag).w
@@ -17900,16 +17900,19 @@ DrawBlockRow:
 GetAddressOfBlockInChunk:
 	movem.l	d4-d5,-(sp)
 	move.w	d4,d3		; d3 = camera Y pos + offset
-	add.w	d3,d3
-	andi.w	#$F00,d3	; limit to units of $100 ($100 = size of a row of FG and BG 128x128s in level layout table)
+;	add.w	d3,d3
+;	andi.w	#$F00,d3	; limit to units of $100 ($100 = size of a row of FG and BG 128x128s in level layout table)
+	asr.w	#5,d3
+	andi.w	#$3C,d3
+	movea.w	(a4,d3.w),a1
 	lsr.w	#3,d5		; divide by 8
 	move.w	d5,d0
 	lsr.w	#4,d0		; divide by 16 (overall division of 128)
-	andi.w	#$7F,d0
-	add.w	d3,d0		; get offset of current 128x128 in the level layout table
+;	andi.w	#$7F,d0
+;	add.w	d3,d0		; get offset of current 128x128 in the level layout table
 	moveq	#-1,d3
 	clr.w	d3		; d3 = $FFFF0000
-	move.b	(a4,d0.w),d3	; get tile ID of the current 128x128 tile
+	move.b	(a1,d0.w),d3	; get tile ID of the current 128x128 tile
 	lsl.w	#7,d3		; multiply by 128, the size in bytes of a 128x128 in RAM
 	andi.w	#$70,d4		; round down to nearest 16-pixel boundary
 	andi.w	#$E,d5		; force this to be a multiple of 16
@@ -18134,18 +18137,20 @@ ProcessAndWriteBlock_DoubleResolution_Vertical:
 GetBlock:
 	add.w	(a3),d5
 	add.w	4(a3),d4
-	lea	(Block_Table).w,a1
 	move.w	d4,d3		; d3 = camera Y pos + offset
-	add.w	d3,d3
-	andi.w	#$F00,d3	; limit to units of $100 ($100 = $80 * 2, $80 = height of a 128x128)
+;	add.w	d3,d3
+;	andi.w	#$F00,d3	; limit to units of $100 ($100 = $80 * 2, $80 = height of a 128x128)
+	asr.w	#5,d3
+	andi.w	#$3C,d3
+	movea.w	(a4,d3.w),a1
 	lsr.w	#3,d5		; divide by 8
 	move.w	d5,d0
 	lsr.w	#4,d0		; divide by 16 (overall division of 128)
-	andi.w	#$7F,d0
-	add.w	d3,d0		; get offset of current 128x128 in the level layout table
+;	andi.w	#$7F,d0
+;	add.w	d3,d0		; get offset of current 128x128 in the level layout table
 	moveq	#-1,d3
 	clr.w	d3		; d3 = $FFFF0000
-	move.b	(a4,d0.w),d3	; get tile ID of the current 128x128 tile
+	move.b	(a1,d0.w),d3	; get tile ID of the current 128x128 tile
 	lsl.w	#7,d3		; multiply by 128, the size in bytes of a 128x128 in RAM
 	andi.w	#$70,d4		; round down to nearest 16-pixel boundary
 	andi.w	#$E,d5		; force this to be a multiple of 16
@@ -18153,6 +18158,7 @@ GetBlock:
 	add.w	d5,d3		; add horizontal offset of current 16x16
 	movea.l	d3,a0		; store address, in the metablock table, of the current 16x16
 	move.w	(a0),d3
+	lea	(Block_Table).w,a1
 	andi.w	#$3FF,d3
 	lsl.w	#3,d3
 	adda.w	d3,a1
@@ -18247,7 +18253,7 @@ DrawInitialBG:
 	lea	(VDP_data_port).l,a6
 	lea	4(a6),a5
 	lea	(Camera_BG_X_pos).w,a3
-	lea	(Level_Layout+$80).w,a4	; background
+	lea	(Level_layout_main+2).w,a4	; background
 	move.w	#vdpComm(VRAM_Plane_B_Name_Table,VRAM,WRITE)>>16,d2
 	; The purpose of this function is to dynamically load a portion of
 	; the background, based on where the BG camera is pointing. This
@@ -18416,10 +18422,14 @@ loadLevelLayout:
 	ror.b	#1,d0
 	lsr.w	#6,d0
 	lea	(Off_Level).l,a0
-	move.w	(a0,d0.w),d0
-	lea	(a0,d0.l),a0
-	lea	(Level_Layout).w,a1
-	jmp	(KosPlusDec).w ; JmpTo_KosPlusDec
+	movea.l	(a0,d0.w),a0		; MJ: moving the address strait to a1 rather than adding a word to an address
+	lea	(Level_layout_header).w,a1
+	move.w	#$7FF,d2
+
+LevelLayout_Loop:
+	move.w	(a0)+,(a1)+
+	dbf	d2,LevelLayout_Loop
+	rts
 ; End of function loadLevelLayout
 
 ; ===========================================================================
@@ -19612,7 +19622,7 @@ LevEvents_CNZ2_Routine1:
 	move.w	(Camera_X_pos).w,(Tails_Min_X_pos).w
 	move.w	#$62E,(Camera_Max_Y_pos_target).w
 	move.w	#$62E,(Tails_Max_Y_pos).w
-	move.b	#$F9,(Level_Layout+$C54).w
+;	move.b	#$F9,(Level_Layout+$C54).w
 	addq.b	#2,(Dynamic_Resize_Routine).w
 +
 	rts
@@ -19626,7 +19636,7 @@ LevEvents_CNZ2_Routine1:
 LevEvents_CNZ2_Routine2:
 	cmpi.w	#$2890,(Camera_X_pos).w
 	blo.s	+	; rts
-	move.b	#$F9,(Level_Layout+$C50).w
+;	move.b	#$F9,(Level_Layout+$C50).w
 	move.w	#$2860,(Camera_Min_X_pos).w
 	move.w	#$28E0,(Camera_Max_X_pos).w
 	move.w	#$2860,(Tails_Min_X_pos).w
@@ -26409,7 +26419,7 @@ loc_15714:
 	tst.b	(Two_player_mode).w
 	beq.s	loc_15758
 	lea	(Camera_X_pos_P2).w,a3
-	lea	(Level_Layout).w,a4
+	lea	(Level_layout_main).w,a4
 	move.w	#vdpComm(VRAM_Plane_A_Name_Table_2P,VRAM,WRITE)>>16,d2
 
 	moveq	#1,d6
@@ -26427,7 +26437,7 @@ loc_15714:
 
 loc_15758:
 	lea	(Camera_X_pos).w,a3
-	lea	(Level_Layout).w,a4
+	lea	(Level_layout_main).w,a4
 	move.w	#vdpComm(VRAM_Plane_A_Name_Table,VRAM,WRITE)>>16,d2
 	move.w	(TitleCard_Background+titlecard_vram_dest).w,d4
 
@@ -26486,7 +26496,7 @@ LoadTitleCard0:
 	move.l	#vdpComm(tiles_to_bytes(ArtTile_ArtNem_TitleCard),VRAM,WRITE),(VDP_control_port).l
 	lea	(ArtNem_TitleCard).l,a0
 	jsr	(NemDec).w ; JmpTo2_NemDec
-	lea	(Level_Layout).w,a4
+	lea	(Level_layout_main).w,a4
 	lea	(ArtNem_TitleCard2).l,a0
 	jmp	(NemDecToRAM).w ; JmpTo_NemDecToRAM
 ; ===========================================================================
@@ -26502,7 +26512,7 @@ LoadTitleCard:
 
 loc_157EC:
 	move	#$2700,sr
-	lea	(Level_Layout).w,a1
+	lea	(Level_layout_main).w,a1
 	lea	(VDP_data_port).l,a6
 	move.l	d0,4(a6)
 
@@ -39650,19 +39660,24 @@ loc_1E57C:
 
 ; loc_1E596: Floor_ChkTile:
 Find_Tile:
+	lea	(Level_layout_header).w,a1
 	move.w	d2,d0	; y_pos
-	add.w	d0,d0
-	andi.w	#$F00,d0	; rounded 2*y_pos
+;	add.w	d0,d0
+;	andi.w	#$F00,d0	; rounded 2*y_pos
+	asr.w	#5,d0
+	andi.w	#$3C,d0
+	move.w	8(a1,d0.w),d0
 	move.w	d3,d1	; x_pos
 	lsr.w	#3,d1
 	move.w	d1,d4
 	lsr.w	#4,d1	; x_pos/128 = x_of_chunk
-	andi.w	#$7F,d1
+;	andi.w	#$7F,d1
 	add.w	d1,d0	; d0 is relevant chunk ID now
 	moveq	#-1,d1
 	clr.w	d1		; d1 is now $FFFF0000 = Chunk_Table
-	lea	(Level_Layout).w,a1
-	move.b	(a1,d0.w),d1	; move 128*128 chunk ID to d1
+	movea.w	d0,a1
+	move.b	(a1),d1
+;	move.b	(a1,d0.w),d1	; move 128*128 chunk ID to d1
 	add.w	d1,d1
 	move.w	word_1E5D0(pc,d1.w),d1
 	move.w	d2,d0	; y_pos
@@ -62782,7 +62797,7 @@ loc_31D7E:
 	andi.b	#$F0,6(a1)
 	ori.b	#3,6(a1)
 	_move.b	#8,0(a1)
-	move.b	#$DD,(Level_Layout+$C54).w
+;	move.b	#$DD,(Level_Layout+$C54).w
 	move.b	#1,(Screen_redraw_flag).w
 	move.w	#-$12,(Boss_Countdown).w
 
@@ -74779,14 +74794,14 @@ ObjB2_Jump_to_plane:
 	beq.s	+
 	addq.b	#2,routine_secondary(a0)
 	move.w	#$20,objoff_2E(a0)
-	lea	(Level_Layout+$0D2).w,a1
-	move.l	#$501F0025,(a1)+
-	lea	(Level_Layout+$1D2).w,a1
-	move.l	#$25001F50,(a1)+
-	lea	(Level_Layout+$BD6).w,a1
-	move.l	#$501F0025,(a1)+
-	lea	(Level_Layout+$CD6).w,a1
-	move.l	#$25001F50,(a1)+
+;	lea	(Level_Layout+$0D2).w,a1
+;	move.l	#$501F0025,(a1)+
+;	lea	(Level_Layout+$1D2).w,a1
+;	move.l	#$25001F50,(a1)+
+;	lea	(Level_Layout+$BD6).w,a1
+;	move.l	#$501F0025,(a1)+
+;	lea	(Level_Layout+$CD6).w,a1
+;	move.l	#$25001F50,(a1)+
 + ; BranchTo6_JmpTo45_DisplaySprite:
 	jmpto	DisplaySprite, JmpTo45_DisplaySprite
 ; ===========================================================================
@@ -76834,12 +76849,12 @@ ObjC2_Bust:
 	move.b	#2,routine(a0)
 	bset	#1,(MainCharacter+status).w
 	bclr	#3,(MainCharacter+status).w
-	lea	(Level_Layout+$850).w,a1	; alter the level layout
-	move.l	#$8A707172,(a1)+
-	move.w	#$7374,(a1)+
-	lea	(Level_Layout+$950).w,a1
-	move.l	#$6E787978,(a1)+
-	move.w	#$787A,(a1)+
+;	lea	(Level_Layout+$850).w,a1	; alter the level layout
+;	move.l	#$8A707172,(a1)+
+;	move.w	#$7374,(a1)+
+;	lea	(Level_Layout+$950).w,a1
+;	move.l	#$6E787978,(a1)+
+;	move.w	#$787A,(a1)+
 	move.b	#1,(Screen_redraw_flag).w
 +
 	jmpto	MarkObjGone, JmpTo39_MarkObjGone
@@ -85274,103 +85289,102 @@ ColP_Invalid:
 ; Two entries per zone, pointing to the level layouts for acts 1 and 2 of each zone
 ; respectively.
 ;---------------------------------------------------------------------------------------
-Off_Level: zoneOrderedOffsetTable 2,2
+Off_Level:
 	; EHZ
-	zoneOffsetTableEntry.w Level_EHZ1	; Act 1
-	zoneOffsetTableEntry.w Level_EHZ2	; Act 2
+	dc.l Level_EHZ1	; Act 1
+	dc.l Level_EHZ2	; Act 2
 	; Zone 1
-	zoneOffsetTableEntry.w Level_Invalid	; Act 1
-	zoneOffsetTableEntry.w Level_Invalid	; Act 2
+	dc.l Level_Invalid	; Act 1
+	dc.l Level_Invalid	; Act 2
 	; WZ
-	zoneOffsetTableEntry.w Level_Invalid	; Act 1
-	zoneOffsetTableEntry.w Level_Invalid	; Act 2
+	dc.l Level_Invalid	; Act 1
+	dc.l Level_Invalid	; Act 2
 	; Zone 3
-	zoneOffsetTableEntry.w Level_Invalid	; Act 1
-	zoneOffsetTableEntry.w Level_Invalid	; Act 2
+	dc.l Level_Invalid	; Act 1
+	dc.l Level_Invalid	; Act 2
 	; MTZ
-	zoneOffsetTableEntry.w Level_MTZ1	; Act 1
-	zoneOffsetTableEntry.w Level_MTZ2	; Act 2
+	dc.l Level_MTZ1	; Act 1
+	dc.l Level_MTZ2	; Act 2
 	; MTZ
-	zoneOffsetTableEntry.w Level_MTZ3	; Act 3
-	zoneOffsetTableEntry.w Level_MTZ3	; Act 4
+	dc.l Level_MTZ3	; Act 3
+	dc.l Level_MTZ3	; Act 4
 	; WFZ
-	zoneOffsetTableEntry.w Level_WFZ	; Act 1
-	zoneOffsetTableEntry.w Level_WFZ	; Act 2
+	dc.l Level_WFZ	; Act 1
+	dc.l Level_WFZ	; Act 2
 	; HTZ
-	zoneOffsetTableEntry.w Level_HTZ1	; Act 1
-	zoneOffsetTableEntry.w Level_HTZ2	; Act 2
+	dc.l Level_HTZ1	; Act 1
+	dc.l Level_HTZ2	; Act 2
 	; HPZ
-	zoneOffsetTableEntry.w Level_HPZ1	; Act 1
-	zoneOffsetTableEntry.w Level_HPZ1	; Act 2
+	dc.l Level_HPZ1	; Act 1
+	dc.l Level_HPZ1	; Act 2
 	; Zone 9
-	zoneOffsetTableEntry.w Level_Invalid	; Act 1
-	zoneOffsetTableEntry.w Level_Invalid	; Act 2
+	dc.l Level_Invalid	; Act 1
+	dc.l Level_Invalid	; Act 2
 	; OOZ
-	zoneOffsetTableEntry.w Level_OOZ1	; Act 1
-	zoneOffsetTableEntry.w Level_OOZ2	; Act 2
+	dc.l Level_OOZ1	; Act 1
+	dc.l Level_OOZ2	; Act 2
 	; MCZ
-	zoneOffsetTableEntry.w Level_MCZ1	; Act 1
-	zoneOffsetTableEntry.w Level_MCZ2	; Act 2
+	dc.l Level_MCZ1	; Act 1
+	dc.l Level_MCZ2	; Act 2
 	; CNZ
-	zoneOffsetTableEntry.w Level_CNZ1	; Act 1
-	zoneOffsetTableEntry.w Level_CNZ2	; Act 2
+	dc.l Level_CNZ1	; Act 1
+	dc.l Level_CNZ2	; Act 2
 	; CPZ
-	zoneOffsetTableEntry.w Level_CPZ1	; Act 1
-	zoneOffsetTableEntry.w Level_CPZ2	; Act 2
+	dc.l Level_CPZ1	; Act 1
+	dc.l Level_CPZ2	; Act 2
 	; DEZ
-	zoneOffsetTableEntry.w Level_DEZ	; Act 1
-	zoneOffsetTableEntry.w Level_DEZ	; Act 2
+	dc.l Level_DEZ	; Act 1
+	dc.l Level_DEZ	; Act 2
 	; ARZ
-	zoneOffsetTableEntry.w Level_ARZ1	; Act 1
-	zoneOffsetTableEntry.w Level_ARZ2	; Act 2
+	dc.l Level_ARZ1	; Act 1
+	dc.l Level_ARZ2	; Act 2
 	; SCZ
-	zoneOffsetTableEntry.w Level_SCZ	; Act 1
-	zoneOffsetTableEntry.w Level_SCZ	; Act 2
-    zoneTableEnd
+	dc.l Level_SCZ	; Act 1
+	dc.l Level_SCZ	; Act 2
 
 ; These are all compressed in the Kosinski format.
 Level_Invalid:
-Level_EHZ1:	BINCLUDE	"level/layout/EHZ_1.kosp"
+Level_EHZ1:	BINCLUDE	"level/layout/EHZ_1.bin"
 	even
-Level_EHZ2:	BINCLUDE	"level/layout/EHZ_2.kosp"
+Level_EHZ2:	BINCLUDE	"level/layout/EHZ_2.bin"
 	even
-Level_MTZ1:	BINCLUDE	"level/layout/MTZ_1.kosp"
+Level_MTZ1:	BINCLUDE	"level/layout/MTZ_1.bin"
 	even
-Level_MTZ2:	BINCLUDE	"level/layout/MTZ_2.kosp"
+Level_MTZ2:	BINCLUDE	"level/layout/MTZ_2.bin"
 	even
-Level_MTZ3:	BINCLUDE	"level/layout/MTZ_3.kosp"
+Level_MTZ3:	BINCLUDE	"level/layout/MTZ_3.bin"
 	even
-Level_WFZ:	BINCLUDE	"level/layout/WFZ.kosp"
+Level_WFZ:	BINCLUDE	"level/layout/WFZ.bin"
 	even
-Level_HTZ1:	BINCLUDE	"level/layout/HTZ_1.kosp"
+Level_HTZ1:	BINCLUDE	"level/layout/HTZ_1.bin"
 	even
-Level_HTZ2:	BINCLUDE	"level/layout/HTZ_2.kosp"
+Level_HTZ2:	BINCLUDE	"level/layout/HTZ_2.bin"
 	even
-Level_HPZ1:	;BINCLUDE	"level/layout/HPZ_1.kosp"
+Level_HPZ1:	;BINCLUDE	"level/layout/HPZ_1.bin"
 	;even
-Level_OOZ1:	BINCLUDE	"level/layout/OOZ_1.kosp"
+Level_OOZ1:	BINCLUDE	"level/layout/OOZ_1.bin"
 	even
-Level_OOZ2:	BINCLUDE	"level/layout/OOZ_2.kosp"
+Level_OOZ2:	BINCLUDE	"level/layout/OOZ_2.bin"
 	even
-Level_MCZ1:	BINCLUDE	"level/layout/MCZ_1.kosp"
+Level_MCZ1:	BINCLUDE	"level/layout/MCZ_1.bin"
 	even
-Level_MCZ2:	BINCLUDE	"level/layout/MCZ_2.kosp"
+Level_MCZ2:	BINCLUDE	"level/layout/MCZ_2.bin"
 	even
-Level_CNZ1:	BINCLUDE	"level/layout/CNZ_1.kosp"
+Level_CNZ1:	BINCLUDE	"level/layout/CNZ_1.bin"
 	even
-Level_CNZ2:	BINCLUDE	"level/layout/CNZ_2.kosp"
+Level_CNZ2:	BINCLUDE	"level/layout/CNZ_2.bin"
 	even
-Level_CPZ1:	BINCLUDE	"level/layout/CPZ_1.kosp"
+Level_CPZ1:	BINCLUDE	"level/layout/CPZ_1.bin"
 	even
-Level_CPZ2:	BINCLUDE	"level/layout/CPZ_2.kosp"
+Level_CPZ2:	BINCLUDE	"level/layout/CPZ_2.bin"
 	even
-Level_DEZ:	BINCLUDE	"level/layout/DEZ.kosp"
+Level_DEZ:	BINCLUDE	"level/layout/DEZ.bin"
 	even
-Level_ARZ1:	BINCLUDE	"level/layout/ARZ_1.kosp"
+Level_ARZ1:	BINCLUDE	"level/layout/ARZ_1.bin"
 	even
-Level_ARZ2:	BINCLUDE	"level/layout/ARZ_2.kosp"
+Level_ARZ2:	BINCLUDE	"level/layout/ARZ_2.bin"
 	even
-Level_SCZ:	BINCLUDE	"level/layout/SCZ.kosp"
+Level_SCZ:	BINCLUDE	"level/layout/SCZ.bin"
 	even
 
 

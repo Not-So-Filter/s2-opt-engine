@@ -969,8 +969,8 @@ RAM_Start:
 Chunk_Table:			ds.b	$8000	; was "Metablock_Table"
 Chunk_Table_End:
 
-Level_Layout:			ds.b	$1000
-Level_Layout_End:
+Level_layout_header		ds.b 8			; first word = chunks per FG row, second word = chunks per BG row, third word = FG rows, fourth word = BG rows
+Level_layout_main		ds.b $FF8		; $40 word-sized line pointers followed by actual layout data
 
 Block_Table:			ds.w	$C00
 Block_Table_End:
