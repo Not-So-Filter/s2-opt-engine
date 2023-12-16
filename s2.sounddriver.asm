@@ -360,6 +360,8 @@ zWriteFMI:    rsttarget
     endif
 	ld	a,c
 	ld	(zYM2612_D0),a
+	ld	a,2Ah			; DAC port
+	ld	(zYM2612_A0),a		; Set DAC port register
 	pop	af
 	ret
 ; End of function zWriteFMI
@@ -381,6 +383,8 @@ zWriteFMII:    rsttarget
     endif
 	ld	a,c
 	ld	(zYM2612_D1),a
+	ld	a,2Ah			; DAC port
+	ld	(zYM2612_A0),a		; Set DAC port register
 	pop	af
 	ret
 ; End of function zWriteFMII
@@ -677,8 +681,6 @@ zWriteToDAC:
 	djnz	$			; 8	; Busy wait for specific amount of time in 'b'
 
 	di				; 4	; disable interrupts (while updating DAC)
-	ld	a,2Ah			; 7	; DAC port
-	ld	(zYM2612_A0),a		; 13	; Set DAC port register
 	ld	a,(hl)			; 7	; Get next DAC byte
 	rlca				; 4
 	rlca				; 4
@@ -699,8 +701,6 @@ zWriteToDAC:
 	djnz	$			; 8	; Busy wait for specific amount of time in 'b'
 
 	di				; 4	; disable interrupts (while updating DAC)
-	ld	a,2Ah			; 7	; DAC port
-	ld	(zYM2612_A0),a		; 13	; Set DAC port register
 	ld	b,c			; 4	; reload 'b' with wait value
 	ld	a,(hl)			; 7	; Get next DAC byte
 	inc	hl			; 6	; Next byte in DAC stream...
@@ -716,8 +716,8 @@ zWriteToDAC:
 	ex	af,af'			; 4	; back to regular registers
 	ei				; 4	; enable interrupts (done updating DAC, busy waiting for next update)
 	jp	zWaitLoop		; 10	; Back to the wait loop; if there's more DAC to write, we come back down again!
-					; 267
-	; 267 cycles for two samples. zDACMasterPlaylist should use 267
+					; 227
+	; 227 cycles for two samples. zDACMasterPlaylist should use 227
 	; divided by 2 as the second parameter to pcmLoopCounter.
 ; ---------------------------------------------------------------------------
 ; 'jman2050' DAC decode lookup table
@@ -871,22 +871,6 @@ zFMSetFreq:
 	jr	z,zFMDoRest		; If this is a rest, jump to zFMDoRest
 	add	a,(ix+zTrack.Transpose)	; Add current channel transpose (coord flag E9)
 	add	a,a			; Offset into Frequency table...
-    if OptimiseDriver
-	ld	d,12*2			; 12 notes per octave
-	ld	c,0			; Clear c (will hold octave bits)
-
-.loop:
-	sub	d			; Subtract 1 octave from the note
-	jr	c,.getoctave		; If this is less than zero, we are done
-	inc	c			; One octave up
-	jp	.loop
-
-.getoctave:
-	add	a,d			; Add 1 octave back (so note index is positive)
-	sla	c
-	sla	c
-	sla	c			; Multiply octave value by 8, to get final octave bits
-    endif
 	add	a,zFrequencies&0FFh
 	ld	(.storefreq+2),a		; Store into the instruction after .storefreq (self-modifying code)
 ;	ld	d,a
@@ -898,13 +882,7 @@ zFMSetFreq:
 .storefreq:
 	ld	de,(zFrequencies)	; Stores frequency into "de"
 	ld	(ix+zTrack.FreqLow),e	; Frequency low byte   -> trackPtr + 0Dh
-    if OptimiseDriver
-	ld	a,d
-	or	c
-	ld	(ix+zTrack.FreqHigh),a	; Frequency high byte  -> trackPtr + 0Eh
-    else
 	ld	(ix+zTrack.FreqHigh),d	; Frequency high byte  -> trackPtr + 0Eh
-    endif
 	ret
 ; ---------------------------------------------------------------------------
 
@@ -1363,15 +1341,10 @@ zPSGNoteOff:
 
 ; ---------------------------------------------------------------------------
 ; lookup table of FM note frequencies for instruments and sound effects
-    if OptimiseDriver
-	ensure1byteoffset 18h
-    else
 	ensure1byteoffset 0C0h
-    endif
 ; zbyte_534
 zFrequencies:
 	dw 025Eh,0284h,02ABh,02D3h,02FEh,032Dh,035Ch,038Fh,03C5h,03FFh,043Ch,047Ch
-    if ~~OptimiseDriver	; We will calculate these, instead, which will save space
 	dw 0A5Eh,0A84h,0AABh,0AD3h,0AFEh,0B2Dh,0B5Ch,0B8Fh,0BC5h,0BFFh,0C3Ch,0C7Ch
 	dw 125Eh,1284h,12ABh,12D3h,12FEh,132Dh,135Ch,138Fh,13C5h,13FFh,143Ch,147Ch
 	dw 1A5Eh,1A84h,1AABh,1AD3h,1AFEh,1B2Dh,1B5Ch,1B8Fh,1BC5h,1BFFh,1C3Ch,1C7Ch
@@ -1379,7 +1352,6 @@ zFrequencies:
 	dw 2A5Eh,2A84h,2AABh,2AD3h,2AFEh,2B2Dh,2B5Ch,2B8Fh,2BC5h,2BFFh,2C3Ch,2C7Ch
 	dw 325Eh,3284h,32ABh,32D3h,32FEh,332Dh,335Ch,338Fh,33C5h,33FFh,343Ch,347Ch
 	dw 3A5Eh,3A84h,3AABh,3AD3h,3AFEh,3B2Dh,3B5Ch,3B8Fh,3BC5h,3BFFh,3C3Ch,3C7Ch ; 96 entries
-    endif
 
 ; zloc_5F4
 zPSGSilenceAll:
@@ -1579,8 +1551,8 @@ zPlaySegaSound:
 
 	ld	hl,zmake68kPtr(Snd_Sega) ; was: 9E8Ch
 	ld	de,(Snd_Sega_End - Snd_Sega)/2	; was: 30BAh
-	ld	a,2Ah			; DAC data register
-	ld	(zYM2612_A0),a		; Select it
+;	ld	a,2Ah			; DAC data register
+;	ld	(zYM2612_A0),a		; Select it
 ;	ld	c,80h			; If QueueToPlay is not this, stops Sega PCM
 
 .loop:
@@ -3781,7 +3753,7 @@ ptrsize :=	2+2
 idstart :=	81h
 
 dac_sample_metadata macro label,sampleRate
-	db	id(label),pcmLoopCounter(sampleRate,267/2)	; See zWriteToDAC for an explanation of this magic number.
+	db	id(label),pcmLoopCounter(sampleRate,227/2)	; See zWriteToDAC for an explanation of this magic number.
     endm
 
 	dac_sample_metadata zDACPtr_Kick,    8250	; 81h

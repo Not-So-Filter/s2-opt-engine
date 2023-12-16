@@ -1638,7 +1638,7 @@ Extra_life_flags_2P:		ds.b	1
 Update_HUD_lives_2P:		ds.b	1
 Update_HUD_rings_2P:		ds.b	1
 Update_HUD_timer_2P:		ds.b	1
-Update_HUD_score_2P:		ds.b	1	; mostly unused
+		ds.b	1	; unused
 Time_Over_flag_2P:		ds.b	1
 				ds.b	3	; $FFFFFECD-$FFFFFECF ; seems unused
 Ring_count_2P:			ds.w	1
