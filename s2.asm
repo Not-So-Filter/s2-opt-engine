@@ -33442,9 +33442,6 @@ Obj01_Traction:
 ; stops Sonic from running through walls that meet the ground
 ; loc_1A64E:
 Obj01_CheckWallsOnGround:
-	move.b	angle(a0),d0
-	addi.b	#$40,d0
-	bmi.s	return_1A6BE
 	move.b	#$40,d1			; Rotate 90 degrees clockwise
 	tst.w	inertia(a0)		; Check inertia
 	beq.s	return_1A6BE	; If not moving, don't do anything
@@ -36345,9 +36342,6 @@ Obj02_Traction:
 ; stops Tails from running through walls that meet the ground
 ; loc_1C232:
 Obj02_CheckWallsOnGround:
-	move.b	angle(a0),d0
-	addi.b	#$40,d0
-	bmi.s	return_1C2A2
 	move.b	#$40,d1
 	tst.w	inertia(a0)
 	beq.s	return_1C2A2
