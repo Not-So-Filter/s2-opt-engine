@@ -1119,8 +1119,9 @@ VDP_ClrCRAM:
 	move.w	d0,(a0)
 	dbf	d7,VDP_ClrCRAM	; clear	the CRAM
 
-	clr.l	(Vscroll_Factor).w
-	clr.l	(unk_F61A).w
+	moveq	#0,d0
+	move.l	d0,(Vscroll_Factor).w
+	move.l	d0,(unk_F61A).w
 	move.l	d1,-(sp)
 
 	dmaFillVRAM 0,$0000,$10000	; fill entire VRAM with 0
@@ -1166,8 +1167,9 @@ ClearScreen:
 
 	dmaFillVRAM 0,VRAM_Plane_A_Name_Table_2P,VRAM_Plane_Table_Size
 +
-	clr.l	(Vscroll_Factor).w
-	clr.l	(unk_F61A).w
+	moveq	#0,d0
+	move.l	d0,(Vscroll_Factor).w
+	move.l	d0,(unk_F61A).w
 
 	clearRAM Sprite_Table,Sprite_Table_End
 	clearRAM Horiz_Scroll_Buf,Horiz_Scroll_Buf+HorizontalScrollBuffer.len
@@ -1644,10 +1646,9 @@ LoadPLC2:
 ClearPLC:
 	lea	(Plc_Buffer).w,a2
 
-	moveq	#0,d0
-	moveq	#bytesToLcnt(Plc_Buffer_End-Plc_Buffer),d1
--	move.l	d0,(a2)+
-	dbf	d1,-
+	moveq	#bytesToLcnt(Plc_Buffer_End-Plc_Buffer),d0
+-	clr.l	(a2)+
+	dbf	d0,-
 
 	rts
 ; End of function ClearPLC
@@ -4796,8 +4797,8 @@ loc_4712:
 +
 	move.b	#AniIDSonAni_Slide,anim(a1)
 	ori.b	#status_sec_isSliding_mask,status_secondary(a1)
-	move.b	(Vint_runcount+3).w,d0
-	andi.b	#$1F,d0
+	moveq	#$1F,d0
+	and.b	(Vint_runcount+3).w,d0
 	bne.s	+	; rts
 	moveq	#SndID_OilSlide,d0
 	bra.w	PlaySound
@@ -5918,8 +5919,8 @@ Pal_SpecialStageStars:	dc.w  $EEE, $CCC, $AAA,	$888, $888, $AAA, $CCC,	$EEE
 
 ;sub_543A
 PalCycle_SS:
-	move.b	(Vint_runcount+3).w,d0
-	andi.b	#3,d0
+	moveq	#3,d0
+	and.b	(Vint_runcount+3).w,d0
 	bne.s	+
 	move.b	(SS_Star_color_1).w,d0
 	addi_.b	#1,(SS_Star_color_1).w
@@ -5939,8 +5940,8 @@ PalCycle_SS:
 /
 	tst.b	(SS_Checkpoint_Rainbow_flag).w
 	beq.s	+	; rts
-	move.b	(Vint_runcount+3).w,d0
-	andi.b	#7,d0
+	moveq	#7,d0
+	and.b	(Vint_runcount+3).w,d0
 	bne.s	+	; rts
 	move.b	(SS_Rainbow_palette).w,d0
 	addi_.b	#1,(SS_Rainbow_palette).w
@@ -9598,7 +9599,7 @@ loc_7AD0:
 	move.l	#ObjDA_MapUnc_7CB6,mappings(a1)
 	move.w	#make_art_tile(ArtTile_ArtNem_ContinueText_2,0,1),art_tile(a1)
 	jsrto	Adjust2PArtPointer2, JmpTo_Adjust2PArtPointer2
-	move.b	#0,render_flags(a1)
+	clr.b	render_flags(a1)
 	lea	next_object(a1),a1 ; load obj addr
 	dbf	d1,-
 
@@ -9610,16 +9611,16 @@ loc_7B46:
 	beq.s	+
 	cmpi.b	#4,(MainCharacter+routine).w
 	blo.s	+
-	move.b	(Vint_runcount+3).w,d0
-	andi.b	#1,d0
+	moveq	#1,d0
+	and.b	(Vint_runcount+3).w,d0
 	bne.s	+
 	tst.w	(MainCharacter+x_vel).w
 	bne.s	JmpTo2_DeleteObject
 	rts
 ; ===========================================================================
 +
-	move.b	(Vint_runcount+3).w,d0
-	andi.b	#$F,d0
+	moveq	#$F,d0
+	and.b	(Vint_runcount+3).w,d0
 	bne.s	JmpTo3_DisplaySprite
 	bchg	#0,mapping_frame(a0)
 
@@ -9799,7 +9800,7 @@ TwoPlayerResults:
 	movea.l	(a2,d0.w),a0
 	movea.l	4(a2,d0.w),a2
 	lea	(Chunk_Table).l,a1
-	move.w	#make_art_tile(ArtTile_VRAM_Start,0,0),d0
+	moveq	#make_art_tile(ArtTile_VRAM_Start,0,0),d0
 	bsr.w	EniDec
 	jsr	(a2)	; dynamic call! to Setup2PResults_Act, Setup2PResults_Zone, Setup2PResults_Game, Setup2PResults_SpecialAct, or Setup2PResults_SpecialZone, assuming the pointers in TwoPlayerResultsPointers have not been changed
 	lea	(Chunk_Table).l,a1
@@ -10820,7 +10821,7 @@ MenuScreen:
 ;MenuScreen_LevSel2P:
 	lea	(Chunk_Table).l,a1
 	lea	(MapEng_LevSel2P).l,a0
-	move.w	#make_art_tile(ArtTile_ArtNem_MenuBox,0,0),d0
+	moveq	#make_art_tile(ArtTile_ArtNem_MenuBox,0,0),d0
 	bsr.w	EniDec
 	lea	(Chunk_Table+$198).l,a1
 	lea	(MapEng_LevSel2P).l,a0
@@ -11111,7 +11112,7 @@ MenuScreenTextToRAM:
 MenuScreen_Options:
 	lea	(Chunk_Table).l,a1
 	lea	(MapEng_Options).l,a0
-	move.w	#make_art_tile(ArtTile_ArtNem_MenuBox,0,0),d0
+	moveq	#make_art_tile(ArtTile_ArtNem_MenuBox,0,0),d0
 	bsr.w	EniDec
 	lea	(Chunk_Table+$160).l,a1
 	lea	(MapEng_Options).l,a0
@@ -11443,7 +11444,7 @@ MenuScreen_LevelSelect:
 	; Load foreground (sans zone icon)
 	lea	(Chunk_Table).l,a1
 	lea	(MapEng_LevSel).l,a0	; 2 bytes per 8x8 tile, compressed
-	move.w	#make_art_tile(ArtTile_VRAM_Start,0,0),d0
+	moveq	#make_art_tile(ArtTile_VRAM_Start,0,0),d0
 	bsr.w	EniDec
 
 	lea	(Chunk_Table).l,a1
@@ -14244,14 +14245,14 @@ SwScrl_Title:
 
 	; Do 32 lines that scroll with the camera.
 	move.w	d2,d0
-	move.w	#32-1,d1
+	moveq	#32-1,d1
 -	move.l	d0,(a1)+
 	dbf	d1,-
 
 	move.w	d0,d3
 	; Make the 'ripple' animate every 8 frames.
-	move.b	(Vint_runcount+3).w,d1
-	andi.w	#7,d1
+	moveq	#7,d1
+	and.b	(Vint_runcount+3).w,d1
 	bne.s	+
 	subq.w	#1,(TempArray_LayerDef).w
 +
@@ -14261,7 +14262,7 @@ SwScrl_Title:
 	lea	(a2,d1.w),a2
 
 	; Do 16 lines that scroll with the camera and 'ripple'.
-	move.w	#16-1,d1
+	moveq	#16-1,d1
 -	move.b	(a2)+,d0
 	ext.w	d0
 	add.w	d3,d0
@@ -14291,7 +14292,7 @@ SwScrl_EHZ:
 	move.w	#0,d0
 
 	; Do 22 lines.
-	move.w	#22-1,d1
+	moveq	#22-1,d1
 -	move.l	d0,(a1)+
 	dbf	d1,-
 
@@ -14299,25 +14300,25 @@ SwScrl_EHZ:
 	asr.w	#6,d0
 
 	; Do 58 lines.
-	move.w	#58-1,d1
+	moveq	#58-1,d1
 -	move.l	d0,(a1)+
 	dbf	d1,-
 
 	move.w	d0,d3
 
 	; Make the 'ripple' animate every 8 frames.
-	move.b	(Vint_runcount+3).w,d1
-	andi.w	#7,d1
+	moveq	#7,d1
+	and.b	(Vint_runcount+3).w,d1
 	bne.s	+
 	subq.w	#1,(TempArray_LayerDef).w
 +
 	move.w	(TempArray_LayerDef).w,d1
 	andi.w	#$1F,d1
-	lea	(SwScrl_RippleData).l,a2
+	lea	SwScrl_RippleData(pc),a2
 	lea	(a2,d1.w),a2
 
 	; Do 21 lines.
-	move.w	#21-1,d1
+	moveq	#21-1,d1
 -	move.b	(a2)+,d0
 	ext.w	d0
 	add.w	d3,d0
@@ -14327,7 +14328,7 @@ SwScrl_EHZ:
 	move.w	#0,d0
 
 	; Do 11 lines.
-	move.w	#11-1,d1
+	moveq	#11-1,d1
 -	move.l	d0,(a1)+
 	dbf	d1,-
 
@@ -14335,7 +14336,7 @@ SwScrl_EHZ:
 	asr.w	#4,d0
 
 	; Do 16 lines.
-	move.w	#16-1,d1
+	moveq	#16-1,d1
 -	move.l	d0,(a1)+
 	dbf	d1,-
 
@@ -14346,7 +14347,7 @@ SwScrl_EHZ:
 	add.w	d1,d0
 
 	; Do 16 lines.
-	move.w	#16-1,d1
+	moveq	#16-1,d1
 -	move.l	d0,(a1)+
 	dbf	d1,-
 
@@ -14367,7 +14368,7 @@ SwScrl_EHZ:
 	asr.w	#3,d3
 
 	; Do 15 lines.
-	move.w	#15-1,d1
+	moveq	#15-1,d1
 -	move.w	d4,(a1)+
 	move.w	d3,(a1)+
 	swap	d3
@@ -14376,7 +14377,7 @@ SwScrl_EHZ:
 	dbf	d1,-
 
 	; Do 18 lines.
-	move.w	#18/2-1,d1
+	moveq	#18/2-1,d1
 -	move.w	d4,(a1)+
 	move.w	d3,(a1)+
 	move.w	d4,(a1)+
@@ -14388,7 +14389,7 @@ SwScrl_EHZ:
 	dbf	d1,-
 
 	; Do 45 lines.
-	move.w	#45/3-1,d1
+	moveq	#45/3-1,d1
 -	move.w	d4,(a1)+
 	move.w	d3,(a1)+
 	move.w	d4,(a1)+
@@ -14425,8 +14426,8 @@ SwScrl_RippleData:
 ; loc_C6C4:
 SwScrl_EHZ_2P:
 	; Make the 'ripple' animate every 8 frames.
-	move.b	(Vint_runcount+3).w,d1
-	andi.w	#7,d1
+	moveq	#7,d1
+	and.b	(Vint_runcount+3).w,d1
 	bne.s	+
 	subq.w	#1,(TempArray_LayerDef).w
 +
@@ -14443,7 +14444,7 @@ SwScrl_EHZ_2P:
 	lea	(Horiz_Scroll_Buf).w,a1
 	move.w	(Camera_X_pos).w,d0
 	; Do 11 lines.
-	move.w	#11-1,d1
+	moveq	#11-1,d1
 	bsr.s	.doBackground
 
 	; Do Player 2's screen.
@@ -14467,7 +14468,7 @@ SwScrl_EHZ_2P:
 	lea	(Horiz_Scroll_Buf+(112-4)*2*2).w,a1
 	move.w	(Camera_X_pos_P2).w,d0
 	; Do 11+4 lines.
-	move.w	#11+4-1,d1
+	moveq	#11+4-1,d1
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
@@ -14485,7 +14486,7 @@ SwScrl_EHZ_2P:
 	asr.w	#6,d0
 
 	; Do 29 lines.
-	move.w	#29-1,d1
+	moveq	#29-1,d1
 -	move.l	d0,(a1)+
 	dbf	d1,-
 
@@ -14496,7 +14497,7 @@ SwScrl_EHZ_2P:
 	lea	(a2,d1.w),a2
 
 	; Do 11 lines.
-	move.w	#11-1,d1
+	moveq	#11-1,d1
 -	move.b	(a2)+,d0
 	ext.w	d0
 	add.w	d3,d0
@@ -14506,7 +14507,7 @@ SwScrl_EHZ_2P:
 	move.w	#0,d0
 
 	; Do 5 lines.
-	move.w	#5-1,d1
+	moveq	#5-1,d1
 -	move.l	d0,(a1)+
 	dbf	d1,-
 
@@ -14514,7 +14515,7 @@ SwScrl_EHZ_2P:
 	asr.w	#4,d0
 
 	; Do 8 lines.
-	move.w	#8-1,d1
+	moveq	#8-1,d1
 -	move.l	d0,(a1)+
 	dbf	d1,-
 
@@ -14525,7 +14526,7 @@ SwScrl_EHZ_2P:
 	add.w	d1,d0
 
 	; Do 8 lines.
-	move.w	#8-1,d1
+	moveq	#8-1,d1
 -	move.l	d0,(a1)+
 	dbf	d1,-
 
@@ -14544,7 +14545,7 @@ SwScrl_EHZ_2P:
 	asr.w	#3,d3
 
 	; Do 40 lines.
-	move.w	#40-1,d1
+	moveq	#40-1,d1
 -	move.w	d2,(a1)+
 	move.w	d3,(a1)+
 	swap	d3
@@ -14774,7 +14775,7 @@ SwScrl_HTZ:
 	asr.w	#3,d0
 
 	; Do 128 lines that move together with the camera.
-	move.w	#128-1,d1
+	moveq	#128-1,d1
 -	move.l	d0,(a1)+
 	dbf	d1,-
 
@@ -14848,7 +14849,7 @@ SwScrl_HTZ:
 	swap	d3
 	move.w	d3,d4
 
-	move.w	#7-1,d1
+	moveq	#7-1,d1
 -	move.l	d4,(a1)+
 	dbf	d1,-
 
@@ -14859,7 +14860,7 @@ SwScrl_HTZ:
 	swap	d3
 	move.w	d3,d4
 
-	move.w	#8-1,d1
+	moveq	#8-1,d1
 -	move.l	d4,(a1)+
 	dbf	d1,-
 
@@ -14870,7 +14871,7 @@ SwScrl_HTZ:
 	swap	d3
 	move.w	d3,d4
 
-	move.w	#10-1,d1
+	moveq	#10-1,d1
 -	move.l	d4,(a1)+
 	dbf	d1,-
 
@@ -14882,7 +14883,7 @@ SwScrl_HTZ:
 	swap	d3
 	move.w	d3,d4
 
-	move.w	#15-1,d1
+	moveq	#15-1,d1
 -	move.l	d4,(a1)+
 	dbf	d1,-
 
@@ -14893,10 +14894,10 @@ SwScrl_HTZ:
 	add.l	d0,d3
 	swap	d3
 
-	move.w	#3-1,d2
+	moveq	#3-1,d2
 -	move.w	d3,d4
 
-	move.w	#16-1,d1
+	moveq	#16-1,d1
 -	move.l	d4,(a1)+
 	dbf	d1,-
 
@@ -15037,8 +15038,8 @@ SwScrl_OOZ:
 	bsr.s	.doLines
 
 	; Make the sun's heat haze effect animate every 8 frames.
-	move.b	(Vint_runcount+3).w,d1
-	andi.w	#7,d1
+	moveq	#7,d1
+	and.b	(Vint_runcount+3).w,d1
 	bne.s	+
 	subq.w	#1,(TempArray_LayerDef).w
 +
@@ -15431,7 +15432,7 @@ SwScrl_MCZ_2P:
 
 	; Use the list of row scroll values and a list of row heights to fill
 	; 'Horiz_Scroll_Buf'.
-	lea	(SwScrl_MCZ2P_RowHeights).l,a3
+	lea	SwScrl_MCZ2P_RowHeights(pc),a3
 	lea	(TempArray_LayerDef).w,a2
 	lea	(Horiz_Scroll_Buf).w,a1
 	move.w	(Camera_BG_Y_pos).w,d1
@@ -15448,7 +15449,7 @@ SwScrl_MCZ_2P:
 
 	neg.w	d1			; d1 = number of lines to draw in this segment
 	subq.w	#2,a2
-	move.w	#112-1,d2		; Number of rows in hscroll buffer
+	moveq	#112-1,d2		; Number of rows in hscroll buffer
 	move.w	(Camera_X_pos).w,d0
 	neg.w	d0
 	swap	d0
@@ -15630,7 +15631,7 @@ SwScrl_MCZ2P_RowHeights:
 
 	neg.w	d1			; d1 = number of lines to draw in this segment
 	subq.w	#2,a2
-	move.w	#112+4-1,d2		; Number of rows in hscroll buffer
+	moveq	#112+4-1,d2		; Number of rows in hscroll buffer
 	move.w	(Camera_X_pos_P2).w,d0
 	neg.w	d0
 	swap	d0
@@ -15673,7 +15674,7 @@ SwScrl_CNZ:
 
 	; Use the list of row scroll values and a list of row heights to fill
 	; 'Horiz_Scroll_Buf'.
-	lea	(SwScrl_CNZ_RowHeights).l,a3
+	lea	SwScrl_CNZ_RowHeights(pc),a3
 	lea	(TempArray_LayerDef).w,a2
 	lea	(Horiz_Scroll_Buf).w,a1
 	move.w	(Camera_BG_Y_pos).w,d1
@@ -15715,7 +15716,7 @@ SwScrl_CNZ:
 
 .isRipplingSegment:
 	; This row is 16 pixels tall.
-	move.w	#16-1,d1
+	moveq	#16-1,d1
 	move.w	d0,d3
 	; Animate the rippling effect every 8 frames.
 	move.b	(Vint_runcount+3).w,d0
@@ -15768,7 +15769,7 @@ SwScrl_CNZ_GenerateScrollValues:
 	moveq	#0,d3
 	move.w	d2,d3
 
-	move.w	#7-1,d1
+	moveq	#7-1,d1
 -	move.w	d3,(a1)+
 	swap	d3
 	add.l	d0,d3
@@ -15814,7 +15815,7 @@ SwScrl_CNZ_2P:
 	moveq	#0,d0
 	move.w	(Camera_X_pos).w,d0
 	move.w	#112-1,d2
-	lea	(SwScrl_CNZ2P_RowHeights_P1).l,a3
+	lea	SwScrl_CNZ2P_RowHeights_P1(pc),a3
 	bsr.s	.doBackground
 
 	; Do player 2's background.
@@ -15851,7 +15852,7 @@ SwScrl_CNZ_2P:
 	moveq	#0,d0
 	move.w	(Camera_X_pos_P2).w,d0
 	move.w	#112+4-1,d2
-	lea	(SwScrl_CNZ2P_RowHeights_P2).l,a3
+	lea	SwScrl_CNZ2P_RowHeights_P2(pc),a3
 
 	; Use a similar trick to Mystic Cave Zone: override the first value
 	; in the code here.
@@ -15904,7 +15905,7 @@ SwScrl_CNZ_2P:
 
 .isRipplingSegment:
 	; This row is 8 pixels tall.
-	move.w	#8-1,d1
+	moveq	#8-1,d1
 	move.w	d0,d3
 	; Animate the rippling effect every 8 frames.
 	move.b	(Vint_runcount+3).w,d0
@@ -15979,8 +15980,8 @@ SwScrl_CPZ:
 
 	; Every 8 frames, subtract 1 from 'TempArray_LayerDef'.
 	; This animates the 'special line block'.
-	move.b	(Vint_runcount+3).w,d1
-	andi.w	#7,d1
+	moveq	#7,d1
+	and.b	(Vint_runcount+3).w,d1
 	bne.s	+
 	subq.w	#1,(TempArray_LayerDef).w
 +
@@ -16067,7 +16068,7 @@ SwScrl_CPZ:
 ; ===========================================================================
 .doFullSpecialLineBlock:
 	; A block is 16 lines.
-	move.w	#16-1,d2
+	moveq	#16-1,d2
 +
 	; The special block row has a ripple effect applied to it.
 	move.w	(Camera_BG_X_pos).w,d3
@@ -23922,8 +23923,8 @@ Obj0E_Sonic_SpawnFallingStar:
 ; loc_13014:
 Obj0E_Sonic_MakeStarSparkle:
 	; Animate the falling star every 8 frames.
-	move.b	(Vint_runcount+3).w,d0
-	andi.b	#7,d0
+	moveq	#7,d0
+	and.b	(Vint_runcount+3).w,d0
 	bne.s	++
 
 	; Advance index, while checking if we've reached the end of the
@@ -47698,8 +47699,7 @@ loc_25C24:
 	move.w	art_tile(a0),art_tile(a1)
 	move.w	priority(a0),priority(a1)
 	move.b	width_pixels(a0),width_pixels(a1)
-	move.w	(a4)+,x_vel(a1)
-	move.w	(a4)+,y_vel(a1)
+	move.l	(a4)+,x_vel(a1)
 	move.b	(a2)+,objoff_3F(a1)
 	dbf	d1,loc_25C1C
 
@@ -55241,8 +55241,8 @@ loc_2BDF8:
 	move.w	a1,objoff_3E(a0)
 	cmpi.b	#$18,(SlotMachine_Routine).w	; Is it the null routine?
 	beq.w	loc_2BC86						; Branch if yes
-	move.b	(Vint_runcount+3).w,d0
-	andi.w	#$F,d0
+	moveq	#$F,d0
+	and.b	(Vint_runcount+3).w,d0
 	bne.s	+	; rts
 	moveq	#SndID_CasinoBonus,d0
 	jmp	(PlaySound).w
@@ -55665,7 +55665,7 @@ SlotMachine_Subroutine2:
 	bsr.s	SlotMachine_GetPixelRow	; Get pointer to pixel row
 	lea	(Block_Table+$1000).w,a1	; Destination for pixel rows
 
-	move.w	#4*8-1,d1			; Slot picture is 4 tiles
+	moveq	#4*8-1,d1			; Slot picture is 4 tiles
 -	move.l	$80(a2),$80(a1)			; Copy pixel row for second column
 	move.l	$100(a2),$100(a1)		; Copy pixel row for third column
 	move.l	$180(a2),$180(a1)		; Copy pixel row for fourth column
@@ -56702,7 +56702,6 @@ Obj50_Init:
 	move.b	#3,anim(a1)
 	move.l	a1,Obj50_child(a0)
 	move.l	a0,Obj50_parent(a1)
-	bset	#6,status(a0)	; set compund sprite flag. This is useless, as the object doesn't define any child spites, nor does it set its child sprite count
 ; loc_2CDA2:
 Obj50_Main:
 	lea	Ani_obj50(pc),a1
@@ -57515,8 +57514,8 @@ AnimateBoss_CmdParam:	; parameter $FF - reset animation to first frame
 
 ;loc_2D6CC:
 Boss_LoadExplosion:
-	move.b	(Vint_runcount+3).w,d0
-	andi.b	#7,d0
+	moveq	#7,d0
+	and.b	(Vint_runcount+3).w,d0
 	bne.s	+	; rts
 	jsr	(AllocateObject).l
 	bne.s	+	; rts
@@ -57910,8 +57909,8 @@ Obj5D_Main_Move:
 ; Creates an explosion every 8 frames at a random position relative to boss.
 ;Obj5D_Main_Explode:
 Obj5D_Main_CreateExplosion:
-	move.b	(Vint_runcount+3).w,d0
-	andi.b	#7,d0
+	moveq	#7,d0
+	and.b	(Vint_runcount+3).w,d0
 	bne.s	+	; rts
 	jsr	(AllocateObject).l
 	bne.s	+	; rts

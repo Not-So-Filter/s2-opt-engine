@@ -339,8 +339,7 @@ zFMBusyWait:    rsttarget
 ; zsub_10
 zWriteFMIorII:    rsttarget
 	bit	2,(ix+zTrack.VoiceControl)
-	jr	z,zWriteFMI
-	jp	zWriteFMII
+	jr	nz,zWriteFMII
 ; End of function zWriteFMIorII
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
@@ -3743,7 +3742,7 @@ zDACPtr_Bongo:		dw	zmake68kPtr(SndDAC_Bongo)
 	; First byte selects one of the DAC samples. The number that
 	; follows it is a wait time between each nibble written to the DAC
 	; (thus higher = slower)
-	ensure1byteoffset 22h
+	ensure1byteoffset 20h
 ; zbyte_124F
 zDACMasterPlaylist:
 
