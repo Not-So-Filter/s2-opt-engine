@@ -514,12 +514,11 @@ Vint_SEGA:
 	bsr.w	Do_ControllerPal
 
 	dma68kToVDP Horiz_Scroll_Buf,VRAM_Horiz_Scroll_Table,VRAM_Horiz_Scroll_Table_Size,VRAM
-	jsrto	SegaScr_VInt, JmpTo_SegaScr_VInt
 	tst.w	(Demo_Time_left).w	; is there time left on the demo?
 	beq.s	+	; if not, return
 	subq.w	#1,(Demo_Time_left).w	; subtract 1 from time left in demo
 +
-	rts
+	jmpto	SegaScr_VInt, JmpTo_SegaScr_VInt
 ; >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ;VintSub14
 Vint_PCM:
@@ -538,12 +537,11 @@ Vint_PCM:
 ;VintSub4
 Vint_Title:
 	bsr.w	Do_ControllerPal
-	bsr.w	ProcessDPLC
 	tst.w	(Demo_Time_left).w	; is there time left on the demo?
 	beq.s	+	; if not, return
 	subq.w	#1,(Demo_Time_left).w	; subtract 1 from time left in demo
 +
-	rts
+	bra.w	ProcessDPLC
 ; >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ;VintSub10
 Vint_Pause:
@@ -596,7 +594,7 @@ loc_748:
 	move.w	(Hint_counter_reserve).w,(a5)
 	move.w	#$8200|(VRAM_Plane_A_Name_Table/$400),(VDP_control_port).l	; Set scroll A PNT base to $C000
 
-	dma68kToVDP Horiz_Scroll_Buf,VRAM_Horiz_Scroll_Table,VRAM_Horiz_Scroll_Table_Size,VRAM
+	dma68kToVDPnoA5 Horiz_Scroll_Buf,VRAM_Horiz_Scroll_Table,VRAM_Horiz_Scroll_Table_Size,VRAM
 
 	tst.b	(Two_player_mode).w
 	beq.s	++
@@ -613,10 +611,10 @@ loc_748:
 	; Upload the front buffer.
 	tst.b	(Current_sprite_table_page).w
 	bne.s	+
-	dma68kToVDP Sprite_Table_Alternate,VRAM_Sprite_Attribute_Table,VRAM_Sprite_Attribute_Table_Size,VRAM
+	dma68kToVDPnoA5 Sprite_Table_Alternate,VRAM_Sprite_Attribute_Table,VRAM_Sprite_Attribute_Table_Size,VRAM
 	bra.s	++
 +
-	dma68kToVDP Sprite_Table,VRAM_Sprite_Attribute_Table,VRAM_Sprite_Attribute_Table_Size,VRAM
+	dma68kToVDPnoA5 Sprite_Table,VRAM_Sprite_Attribute_Table,VRAM_Sprite_Attribute_Table_Size,VRAM
 +
 
 	bsr.w	ProcessDMAQueue
@@ -643,12 +641,11 @@ loc_748:
 Do_Updates:
 	jsrto	LoadTilesAsYouMove, JmpTo_LoadTilesAsYouMove
 	jsr	(HudUpdate).l
-	bsr.w	ProcessDPLC2
 	tst.w	(Demo_Time_left).w	; is there time left on the demo?
 	beq.s	+		; if not, branch
 	subq.w	#1,(Demo_Time_left).w	; subtract 1 from time left in demo
 +
-	rts
+	bra.w	ProcessDPLC2
 ; End of function Do_Updates
 
 ; ---------------------------------------------------------------------------
@@ -671,17 +668,17 @@ Vint_S2SS:
 	bsr.w	SSSet_VScroll
 
 	dma68kToVDP Normal_palette,$0000,palette_line_size*4,CRAM
-	dma68kToVDP Sprite_Table,VRAM_Sprite_Attribute_Table,VRAM_Sprite_Attribute_Table_Size,VRAM
+	dma68kToVDPnoA5 Sprite_Table,VRAM_Sprite_Attribute_Table,VRAM_Sprite_Attribute_Table_Size,VRAM
 
 	tst.b	(SS_Alternate_HorizScroll_Buf).w
 	beq.s	loc_906
 
-	dma68kToVDP SS_Horiz_Scroll_Buf_2,VRAM_Horiz_Scroll_Table,VRAM_Horiz_Scroll_Table_Size,VRAM
+	dma68kToVDPnoA5 SS_Horiz_Scroll_Buf_2,VRAM_Horiz_Scroll_Table,VRAM_Horiz_Scroll_Table_Size,VRAM
 	bra.s	loc_92A
 ; ---------------------------------------------------------------------------
 
 loc_906:
-	dma68kToVDP SS_Horiz_Scroll_Buf_1,VRAM_Horiz_Scroll_Table,VRAM_Horiz_Scroll_Table_Size,VRAM
+	dma68kToVDPnoA5 SS_Horiz_Scroll_Buf_1,VRAM_Horiz_Scroll_Table,VRAM_Horiz_Scroll_Table_Size,VRAM
 
 loc_92A:
 	tst.b	(SSTrack_Orientation).w			; Is the current track frame flipped?
@@ -728,12 +725,11 @@ SS_PNTA_Transfer_Table:
 +
 	bsr.w	ProcessDMAQueue
 
-	bsr.w	ProcessDPLC2
 	tst.w	(Demo_Time_left).w
 	beq.s	+	; rts
 	subq.w	#1,(Demo_Time_left).w
 +
-	rts
+	bra.w	ProcessDPLC2
 ; ---------------------------------------------------------------------------
 ; (!)
 ; Each of these functions copies one fourth of pattern name table A into VRAM
@@ -836,7 +832,7 @@ loc_BB2:
 loc_BD6:
 	move.w	(Hint_counter_reserve).w,(a5)
 
-	dma68kToVDP Horiz_Scroll_Buf,VRAM_Horiz_Scroll_Table,VRAM_Horiz_Scroll_Table_Size,VRAM
+	dma68kToVDPnoA5 Horiz_Scroll_Buf,VRAM_Horiz_Scroll_Table,VRAM_Horiz_Scroll_Table_Size,VRAM
 
 	tst.b	(Two_player_mode).w
 	beq.s	++
@@ -853,10 +849,10 @@ loc_BD6:
 	; Upload the front buffer.
 	tst.b	(Current_sprite_table_page).w
 	bne.s	+
-	dma68kToVDP Sprite_Table_Alternate,VRAM_Sprite_Attribute_Table,VRAM_Sprite_Attribute_Table_Size,VRAM
+	dma68kToVDPnoA5 Sprite_Table_Alternate,VRAM_Sprite_Attribute_Table,VRAM_Sprite_Attribute_Table_Size,VRAM
 	bra.s	++
 +
-	dma68kToVDP Sprite_Table,VRAM_Sprite_Attribute_Table,VRAM_Sprite_Attribute_Table_Size,VRAM
+	dma68kToVDPnoA5 Sprite_Table,VRAM_Sprite_Attribute_Table,VRAM_Sprite_Attribute_Table_Size,VRAM
 +
 	bsr.w	ProcessDMAQueue
 	jsr	(DrawLevelTitleCard).l
@@ -879,8 +875,8 @@ Vint_Ending:
 	bsr.w	ReadJoypads
 
 	dma68kToVDP Normal_palette,$0000,palette_line_size*4,CRAM
-	dma68kToVDP Sprite_Table,VRAM_Sprite_Attribute_Table,VRAM_Sprite_Attribute_Table_Size,VRAM
-	dma68kToVDP Horiz_Scroll_Buf,VRAM_Horiz_Scroll_Table,VRAM_Horiz_Scroll_Table_Size,VRAM
+	dma68kToVDPnoA5 Sprite_Table,VRAM_Sprite_Attribute_Table,VRAM_Sprite_Attribute_Table_Size,VRAM
+	dma68kToVDPnoA5 Horiz_Scroll_Buf,VRAM_Horiz_Scroll_Table,VRAM_Horiz_Scroll_Table_Size,VRAM
 
 	bsr.w	ProcessDMAQueue
 	movem.l	(Camera_RAM).w,d0-d7
@@ -924,17 +920,16 @@ Vint_Menu:
 	bsr.w	ReadJoypads
 
 	dma68kToVDP Normal_palette,$0000,palette_line_size*4,CRAM
-	dma68kToVDP Sprite_Table,VRAM_Sprite_Attribute_Table,VRAM_Sprite_Attribute_Table_Size,VRAM
-	dma68kToVDP Horiz_Scroll_Buf,VRAM_Horiz_Scroll_Table,VRAM_Horiz_Scroll_Table_Size,VRAM
+	dma68kToVDPnoA5 Sprite_Table,VRAM_Sprite_Attribute_Table,VRAM_Sprite_Attribute_Table_Size,VRAM
+	dma68kToVDPnoA5 Horiz_Scroll_Buf,VRAM_Horiz_Scroll_Table,VRAM_Horiz_Scroll_Table_Size,VRAM
 
 	bsr.w	ProcessDMAQueue
 
-	bsr.w	ProcessDPLC
 	tst.w	(Demo_Time_left).w
 	beq.s	+	; rts
 	subq.w	#1,(Demo_Time_left).w
 +
-	rts
+	bra.w	ProcessDPLC
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
@@ -952,8 +947,8 @@ loc_EDA:
 	dma68kToVDP Underwater_palette,$0000,palette_line_size*4,CRAM
 
 loc_EFE:
-	dma68kToVDP Sprite_Table,VRAM_Sprite_Attribute_Table,VRAM_Sprite_Attribute_Table_Size,VRAM
-	dma68kToVDP Horiz_Scroll_Buf,VRAM_Horiz_Scroll_Table,VRAM_Horiz_Scroll_Table_Size,VRAM
+	dma68kToVDPnoA5 Sprite_Table,VRAM_Sprite_Attribute_Table,VRAM_Sprite_Attribute_Table_Size,VRAM
+	dma68kToVDPnoA5 Horiz_Scroll_Buf,VRAM_Horiz_Scroll_Table,VRAM_Horiz_Scroll_Table_Size,VRAM
 	rts
 ; End of function sub_E98
 ; ||||||||||||||| E N D   O F   V - I N T |||||||||||||||||||||||||||||||||||
@@ -1015,7 +1010,8 @@ PalToCRAM:
 	move.l	(a0)+,(a1)	; move palette to CRAM (all 64 colors at once)
     endm
 	move.w	#$8ADF,4(a1)	; Write %1101 %1111 to register 10 (interrupt every 224th line)
-	movem.l	(sp)+,a0-a1
+	movea.l	(sp)+,a0
+	movea.l	(sp)+,a1
 	tst.b	(Do_Updates_in_H_int).w
 	bne.s	loc_1072
 	rte
@@ -1069,7 +1065,7 @@ ReadJoypads:
 
 ; sub_112A:
 Joypad_Read:
-	move.b	#0,(a1)
+	clr.b	(a1)
 	nop
 	nop
 	move.b	(a1),d0
@@ -3802,13 +3798,13 @@ TitleScreen_CheckIfChose2P:
 	move.l	d0,(Got_Emeralds_array+4).w
 
 	move.b	#GameModeID_2PLevelSelect,(Game_Mode).w ; => LevelSelectMenu2P
-	move.b	#0,(Current_Zone_2P).w
+	clr.b	(Current_Zone_2P).w
 	rts
 ; ---------------------------------------------------------------------------
 ; loc_3D20:
 TitleScreen_ChoseOptions:
 	move.b	#GameModeID_OptionsMenu,(Game_Mode).w ; => OptionsMenu
-	move.b	#0,(Options_menu_box).w
+	clr.b	(Options_menu_box).w
 	rts
 ; ===========================================================================
 ; loc_3D2E:
@@ -3831,7 +3827,7 @@ TitleScreen_Demo:
 	move.b	#GameModeID_Demo,(Game_Mode).w ; => Level (Demo mode)
 	cmpi.w	#emerald_hill_zone_act_1,(Current_ZoneAndAct).w
 	bne.s	+
-	move.b	#1,(Two_player_mode).w
+	st.b	(Two_player_mode).w
 +
 	moveq	#3,d0
 	move.b	d0,(Life_count).w
@@ -4051,7 +4047,7 @@ Level_ClrRam:
 
 Level_InitWater:
 	st.b	(Water_flag).w
-	move.b	#0,(Two_player_mode).w
+	clr.b	(Two_player_mode).w
 +
 	lea	(VDP_control_port).l,a6
 	move.w	#$8B03,(a6)		; EXT-INT disabled, V scroll by screen, H scroll by line
@@ -4233,8 +4229,7 @@ Level_FromCheckpoint:
 	moveq	#0,d0
 	move.b	(Current_Zone).w,d0	; load zone value
 	add.w	d0,d0
-	add.w	d0,d0
-	movea.l	(a1,d0.w),a1
+	movea.w	(a1,d0.w),a1
 	move.b	1(a1),(Demo_press_counter).w
     if emerald_hill_zone<>0
 	cmpi.b	#emerald_hill_zone,(Current_Zone).w
@@ -4883,8 +4878,7 @@ MoveDemo_On:
 	moveq	#0,d0
 	move.b	(Current_Zone).w,d0
 	add.w	d0,d0
-	add.w	d0,d0
-	movea.l	DemoScriptPointers(pc,d0.w),a1
+	movea.w	DemoScriptPointers(pc,d0.w),a1
 
 	move.w	(Demo_button_index).w,d0
 	adda.w	d0,a1	; a1 now points to the current button press data
@@ -4939,23 +4933,23 @@ MoveDemo_On_SkipP2:
 ; ---------------------------------------------------------------------------
 ; off_4948:
 DemoScriptPointers: zoneOrderedTable 4,1
-	zoneTableEntry.l Demo_EHZ	; EHZ
-	zoneTableEntry.l Demo_EHZ	; Zone 1
-	zoneTableEntry.l Demo_EHZ	; WZ
-	zoneTableEntry.l Demo_EHZ	; Zone 3
-	zoneTableEntry.l Demo_EHZ	; MTZ1,2
-	zoneTableEntry.l Demo_EHZ	; MTZ3
-	zoneTableEntry.l Demo_EHZ	; WFZ
-	zoneTableEntry.l Demo_EHZ	; HTZ
-	zoneTableEntry.l Demo_EHZ	; HPZ
-	zoneTableEntry.l Demo_EHZ	; Zone 9
-	zoneTableEntry.l Demo_EHZ	; OOZ
-	zoneTableEntry.l Demo_EHZ	; MCZ
-	zoneTableEntry.l Demo_CNZ	; CNZ
-	zoneTableEntry.l Demo_CPZ	; CPZ
-	zoneTableEntry.l Demo_EHZ	; DEZ
-	zoneTableEntry.l Demo_ARZ	; ARZ
-	zoneTableEntry.l Demo_EHZ	; SCZ
+	zoneTableEntry.w Demo_EHZ	; EHZ
+	zoneTableEntry.w Demo_EHZ	; Zone 1
+	zoneTableEntry.w Demo_EHZ	; WZ
+	zoneTableEntry.w Demo_EHZ	; Zone 3
+	zoneTableEntry.w Demo_EHZ	; MTZ1,2
+	zoneTableEntry.w Demo_EHZ	; MTZ3
+	zoneTableEntry.w Demo_EHZ	; WFZ
+	zoneTableEntry.w Demo_EHZ	; HTZ
+	zoneTableEntry.w Demo_EHZ	; HPZ
+	zoneTableEntry.w Demo_EHZ	; Zone 9
+	zoneTableEntry.w Demo_EHZ	; OOZ
+	zoneTableEntry.w Demo_EHZ	; MCZ
+	zoneTableEntry.w Demo_CNZ	; CNZ
+	zoneTableEntry.w Demo_CPZ	; CPZ
+	zoneTableEntry.w Demo_EHZ	; DEZ
+	zoneTableEntry.w Demo_ARZ	; ARZ
+	zoneTableEntry.w Demo_EHZ	; SCZ
     zoneTableEnd
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
@@ -9860,8 +9854,9 @@ TwoPlayerResults:
 	addq.b	#1,(Current_Act).w	; go to the next act
 	move.b	#1,(Current_Act_2P).w
 	move.b	#GameModeID_Level,(Game_Mode).w ; => Level (Zone play mode)
-	move.b	#0,(Last_star_pole_hit).w
-	move.b	#0,(Last_star_pole_hit_2P).w
+	moveq	#0,d0
+	move.b	d0,(Last_star_pole_hit).w
+	move.b	d0,(Last_star_pole_hit_2P).w
 	moveq	#1,d0
 	move.b	d0,(Two_player_mode).w
 	move.b	d0,(Two_player_mode_copy).w
@@ -9896,8 +9891,9 @@ TwoPlayerResults:
 	moveq	#1,d0
 	move.b	d0,(Two_player_mode).w
 	move.b	d0,(Two_player_mode_copy).w
-	move.b	#0,(Last_star_pole_hit).w
-	move.b	#0,(Last_star_pole_hit_2P).w
+	moveq	#0,d0
+	move.b	d0,(Last_star_pole_hit).w
+	move.b	d0,(Last_star_pole_hit_2P).w
 	rts
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
@@ -9998,9 +9994,10 @@ TwoPlayerResultsDone_SpecialStage:
 	addq.b	#1,(Current_Act_2P).w
 	addq.b	#1,(Current_Special_Stage).w
 	move.w	#VsRSID_SS,(Results_Screen_2P).w
-	move.b	#1,(f_bigring).w
+	moveq	#1,d0
+	move.b	d0,(f_bigring).w
 	move.b	#GameModeID_SpecialStage,(Game_Mode).w ; => SpecialStage
-	move.b	#1,(Two_player_mode).w
+	move.b	d0,(Two_player_mode).w
 	move.w	#0,(Level_Music).w
 	rts
 
@@ -10913,11 +10910,11 @@ loc_8DF4:
 	move.w	LevelSelect2P_LevelOrder(pc,d0.w),d0
 	bmi.s	loc_8E3A
 	move.w	d0,(Current_ZoneAndAct).w
-	move.b	#1,(Two_player_mode).w
+	st.b	(Two_player_mode).w
 	move.b	#GameModeID_Level,(Game_Mode).w ; => Level (Zone play mode)
-	move.b	#0,(Last_star_pole_hit).w
-	move.b	#0,(Last_star_pole_hit_2P).w
 	moveq	#0,d0
+	move.b	d0,(Last_star_pole_hit).w
+	move.b	d0,(Last_star_pole_hit_2P).w
 	move.l	d0,(Score).w
 	move.l	d0,(Score_2P).w
 	move.l	#5000,(Next_Extra_life_score).w
@@ -11605,8 +11602,9 @@ LevelSelect_StartZone:
 	andi.w	#$3FFF,d0
 	move.w	d0,(Current_ZoneAndAct).w
 	move.b	#GameModeID_Level,(Game_Mode).w ; => Level (Zone play mode)
-	move.b	#3,(Life_count).w
-	move.b	#3,(Life_count_2P).w
+	moveq	#3,d0
+	move.b	d0,(Life_count).w
+	move.b	d0,(Life_count_2P).w
 	moveq	#0,d0
 	move.w	d0,(Ring_count).w
 	move.l	d0,(Timer).w
@@ -22652,7 +22650,7 @@ CollectRing_1P:
 	cmpi.w	#999,(Ring_count).w	; does the player 1 have 999 or more rings?
 	bhs.s	JmpTo_PlaySound2	; if yes, play the ring sound
 	addq.w	#1,(Ring_count).w	; add 1 to the ring count
-	ori.b	#1,(Update_HUD_rings).w	; set flag to update the ring counter in the HUD
+	st.b	(Update_HUD_rings).w	; set flag to update the ring counter in the HUD
     endif
 
 	cmpi.w	#100,(Ring_count).w	; does the player 1 have less than 100 rings?
@@ -22686,7 +22684,7 @@ CollectRing_Tails:
 	beq.s	CollectRing_1P			; if not, branch
 
 ; CollectRing_2P:
-	ori.b	#1,(Update_HUD_rings_2P).w	; set flag to update the ring counter in the second player's HUD
+	st.b	(Update_HUD_rings_2P).w	; set flag to update the ring counter in the second player's HUD
 	moveq	#SndID_Ring,d0			; prepare to play the ring sound
 	cmpi.w	#100,(Ring_count_2P).w		; does the player 2 have less than 100 rings?
 	blo.s	JmpTo2_PlaySound2		; if yes, play the ring sound
@@ -22721,8 +22719,8 @@ Obj37:
 Obj37_Index:	offsetTable
 		offsetTableEntry.w Obj37_Init		; 0
 		offsetTableEntry.w Obj37_Main		; 2
-		offsetTableEntry.w Obj37_Collect	; 4
-		offsetTableEntry.w Obj37_Sparkle	; 6
+		offsetTableEntry.w Obj25_Collect	; 4
+		offsetTableEntry.w Obj25_Sparkle	; 6
 		offsetTableEntry.w Obj37_Delete		; 8
 ; ===========================================================================
 ; Obj_37_sub_0:
@@ -22749,8 +22747,9 @@ Obj37_Init:
 +
 	_move.b	#ObjID_LostRings,id(a1) ; load obj37
 	addq.b	#2,routine(a1)
-	move.b	#8,y_radius(a1)
-	move.b	#8,x_radius(a1)
+	moveq	#8,d0
+	move.b	d0,y_radius(a1)
+	move.b	d0,x_radius(a1)
 	move.w	x_pos(a0),x_pos(a1)
 	move.w	y_pos(a0),y_pos(a1)
 	move.l	#Obj25_MapUnc_12382,mappings(a1)
@@ -22759,7 +22758,7 @@ Obj37_Init:
 	move.b	#$84,render_flags(a1)
 	move.w	#$80*3,priority(a1)
 	move.b	#$47,collision_flags(a1)
-	move.b	#8,width_pixels(a1)
+	move.b	d0,width_pixels(a1)
 	st.b	(Ring_spill_anim_counter).w
 	tst.w	d4
 	bmi.s	+
@@ -22787,15 +22786,17 @@ Obj37_Init:
 	jsr	(PlaySound).w
 	tst.b	parent+1(a0)
 	bne.s	+
-	move.w	#0,(Ring_count).w
-	move.b	#$80,(Update_HUD_rings).w
-	move.b	#0,(Extra_life_flags).w
+	moveq	#0,d0
+	move.w	d0,(Ring_count).w
+	st.b	(Update_HUD_rings).w
+	move.b	d0,(Extra_life_flags).w
 	bra.s	Obj37_Main
 ; ===========================================================================
 +
-	move.w	#0,(Ring_count_2P).w
-	move.b	#$80,(Update_HUD_rings_2P).w
-	move.b	#0,(Extra_life_flags_2P).w
+	moveq	#0,d0
+	move.w	d0,(Ring_count_2P).w
+	st.b	(Update_HUD_rings_2P).w
+	move.b	d0,(Extra_life_flags_2P).w
 ; Obj_37_sub_2:
 Obj37_Main:
 	move.b	(Ring_spill_anim_frame).w,mapping_frame(a0)
@@ -22832,18 +22833,6 @@ loc_121D0:
 	tst.b	(Two_player_mode).w
 	bne.s	Obj37_Delete
 	bra.s	loc_121B8
-; ===========================================================================
-; Obj_37_sub_4:
-Obj37_Collect:
-	addq.b	#2,routine(a0)
-	clr.b	collision_flags(a0)
-	move.w	#$80*1,priority(a0)
-	bsr.w	CollectRing
-; Obj_37_sub_6:
-Obj37_Sparkle:
-	lea	Ani_Ring(pc),a1
-	bsr.w	AnimateSprite
-	bra.w	DisplaySprite
 ; ===========================================================================
 ; BranchTo5_DeleteObject
 Obj37_Delete:
@@ -27303,14 +27292,11 @@ ObjectMoveAndFall:
 
 ; sub_163AC: SpeedToPos:
 ObjectMove:
-	move.w	x_vel(a0),d0	; load horizontal speed
-	ext.l	d0
+	movem.w	x_vel(a0),d0/d2	; load horizontal speed
 	lsl.l	#8,d0	; shift velocity to line up with the middle 16 bits of the 32-bit position
 	add.l	d0,x_pos(a0)	; add to x-axis position	; note this affects the subpixel position x_sub(a0) = 2+x_pos(a0)
-	move.w	y_vel(a0),d0	; load vertical speed
-	ext.l	d0
-	lsl.l	#8,d0	; shift velocity to line up with the middle 16 bits of the 32-bit position
-	add.l	d0,y_pos(a0)	; add to y-axis position	; note this affects the subpixel position y_sub(a0) = 2+y_pos(a0)
+	lsl.l	#8,d2	; shift velocity to line up with the middle 16 bits of the 32-bit position
+	add.l	d2,y_pos(a0)	; add to y-axis position	; note this affects the subpixel position y_sub(a0) = 2+y_pos(a0)
 	rts
 ; End of function ObjectMove
 ; >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -44456,14 +44442,11 @@ loc_2271A:
 ; update the position of Sonic/Tails in the CPZ tube
 ; loc_2275E:
 Obj1E_MoveCharacter:
-	move.w	x_vel(a1),d0
-	ext.l	d0
+	movem.w	x_vel(a1),d0/d2
 	lsl.l	#8,d0
 	add.l	d0,x_pos(a1)
-	move.w	y_vel(a1),d0
-	ext.l	d0
-	lsl.l	#8,d0
-	add.l	d0,y_pos(a1)
+	lsl.l	#8,d2
+	add.l	d2,y_pos(a1)
 	rts
 ; ===========================================================================
 
@@ -44527,14 +44510,11 @@ loc_2281C:
 ; update the position of Sonic/Tails in the CPZ tube
 ; loc_22832:
 Obj1E_MoveCharacter_2:
-	move.w	x_vel(a1),d0
-	ext.l	d0
+	movem.w	x_vel(a1),d0/d2
 	lsl.l	#8,d0
 	add.l	d0,x_pos(a1)
-	move.w	y_vel(a1),d0
-	ext.l	d0
-	lsl.l	#8,d0
-	add.l	d0,y_pos(a1)
+	lsl.l	#8,d2
+	add.l	d2,y_pos(a1)
 	rts
 ; ===========================================================================
 
@@ -46855,14 +46835,11 @@ loc_25036:
 ; update the position of Sonic/Tails from the block thing to the launcher
 ; loc_25054:
 Obj3D_MoveCharacter:
-	move.w	x_vel(a1),d0
-	ext.l	d0
+	movem.w	x_vel(a1),d0/d2
 	lsl.l	#8,d0
 	add.l	d0,x_pos(a1)
-	move.w	y_vel(a1),d0
-	ext.l	d0
-	lsl.l	#8,d0
-	add.l	d0,y_pos(a1)
+	lsl.l	#8,d2
+	add.l	d2,y_pos(a1)
 	rts
 ; ===========================================================================
 word_2507A:
@@ -47163,14 +47140,11 @@ loc_254C2:
 ; update the position of Sonic/Tails between launchers
 ; loc_254CC:
 Obj48_MoveCharacter:
-	move.w	x_vel(a1),d0
-	ext.l	d0
+	movem.w	x_vel(a1),d0/d2
 	lsl.l	#8,d0
 	add.l	d0,x_pos(a1)
-	move.w	y_vel(a1),d0
-	ext.l	d0
-	lsl.l	#8,d0
-	add.l	d0,y_pos(a1)
+	lsl.l	#8,d2
+	add.l	d2,y_pos(a1)
 	rts
 ; ===========================================================================
 
@@ -49295,14 +49269,11 @@ loc_27294:
 ; update the position of Sonic/Tails in the MTZ tube
 ; loc_272C8:
 Obj67_MoveCharacter:
-	move.w	x_vel(a1),d0
-	ext.l	d0
+	movem.w	x_vel(a1),d0/d2
 	lsl.l	#8,d0
 	add.l	d0,x_pos(a1)
-	move.w	y_vel(a1),d0
-	ext.l	d0
-	lsl.l	#8,d0
-	add.l	d0,y_pos(a1)
+	lsl.l	#8,d2
+	add.l	d2,y_pos(a1)
 	rts
 ; ===========================================================================
 
@@ -57387,14 +57358,11 @@ Boss_Defeat:
 
 ;loc_2D5DE:
 Boss_MoveObject:
-	move.w	(Boss_X_vel).w,d0
-	ext.l	d0
+	movem.w	(Boss_X_vel).w,d0/d2
 	lsl.l	#8,d0
 	add.l	d0,(Boss_X_pos).w
-	move.w	(Boss_Y_vel).w,d0
-	ext.l	d0
-	lsl.l	#8,d0
-	add.l	d0,(Boss_Y_pos).w
+	lsl.l	#8,d2
+	add.l	d2,(Boss_Y_pos).w
 	rts
 ; ===========================================================================
 ; a1 = animation script pointer
@@ -57896,14 +57864,11 @@ Obj5D_Defeated:
 ; ===========================================================================
 
 Obj5D_Main_Move:
-	move.w	x_vel(a0),d0
-	ext.l	d0
+	movem.w	x_vel(a0),d0/d2
 	lsl.l	#8,d0
 	add.l	d0,Obj5D_x_pos_next(a0)
-	move.w	y_vel(a0),d0
-	ext.l	d0
-	lsl.l	#8,d0
-	add.l	d0,Obj5D_y_pos_next(a0)
+	lsl.l	#8,d2
+	add.l	d2,Obj5D_y_pos_next(a0)
 	rts
 ; ===========================================================================
 ; Creates an explosion every 8 frames at a random position relative to boss.
@@ -58048,13 +58013,11 @@ Obj5D_FallingParts:
 	bpl.w	JmpTo34_DisplaySprite
 	move.w	x_vel(a0),d0
 	add.w	d0,x_pos(a0)
-	move.l	y_pos(a0),d3
 	move.w	y_vel(a0),d0
 	addi.w	#$38,y_vel(a0)
 	ext.l	d0
-	asl.l	#8,d0
-	add.l	d0,d3
-	move.l	d3,y_pos(a0)
+	lsl.l	#8,d0
+	add.l	d0,y_pos(a0)
 	cmpi.l	#$5800000,d3
 	bhs.w	JmpTo51_DeleteObject
 	jmpto	MarkObjGone, JmpTo35_MarkObjGone
